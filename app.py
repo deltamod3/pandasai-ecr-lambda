@@ -1,10 +1,11 @@
+import serverless_wsgi
 from flask import Flask, request, jsonify
 import pandas as pd
 from typing import Any, List, Optional
 import json
 from pandasai import SmartDataframe
 from pandasai.prompts import AbstractPrompt
-from pandasai import Agents
+from pandasai import Agent
 from pandasai.llm import OpenAI
 
 app = Flask(__name__)
@@ -73,3 +74,8 @@ def ask_ai(list_of_lists: list, query, api_key):
 
 if __name__ == "__main__":
     app.run(debug=True)
+
+
+# We need to define handler for AWS lambda function, that is defined in Dockerfile.
+def handler(event, context):
+    return serverless_wsgi.handle_request(app, event, context)

@@ -1,0 +1,27 @@
+service: pandasai-ecr-lambda
+
+provider:
+  name: aws
+  stage: dev
+  region: eu-north-1
+  runtime: python3.9
+  ecr:
+    scanOnPush: true
+    images:
+      appImage:
+        path: ./
+        platform: linux/amd64
+
+functions:
+  app:
+    image: appImage
+    timeout: 30
+    events:
+      - http:
+          path: /
+          method: any
+          cors: true
+      - http:
+          path: /{proxy+}
+          method: any
+          cors: true
