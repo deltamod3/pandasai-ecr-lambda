@@ -1,0 +1,3 @@
+Werkzeug==2.3.6
+Flask==2.0.1
+pandasai
