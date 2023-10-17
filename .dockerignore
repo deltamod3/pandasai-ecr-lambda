@@ -4,3 +4,4 @@ __pycache__/
 .gitignore
 .dockerignore
 serverless.yml
+tmp/

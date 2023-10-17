@@ -1,11 +1,11 @@
+import os
 import serverless_wsgi
 from flask import Flask, request, jsonify
 import pandas as pd
 from typing import Any, List, Optional
 import json
-from pandasai import SmartDataframe
-from pandasai.prompts import AbstractPrompt
-from pandasai import Agent
+from pandasai import SmartDatalake
+from pandasai.helpers.memory import Memory
 from pandasai.llm import OpenAI
 
 app = Flask(__name__)
@@ -62,8 +62,33 @@ def ask_ai(list_of_lists: list, query, api_key):
     # OpenAi settings
     llm = OpenAI(api_token=api_key,temperature=0.1)
     
-    # Create agent
-    agent = Agent(df, config={"llm": llm,"enable_cache": False},memory_size=4)
+    # Set working dir to /tmp, so we can prevent errors in lambda function
+    if os.environ.get("AWS_LAMBDA_FUNCTION_NAME") is not None:
+        tmp_dir = "/tmp"
+    else:
+        current_file_path = os.path.abspath(os.getcwd())
+        tmp_dir = os.path.join(current_file_path, "tmp")
+    if not os.path.exists(tmp_dir):
+        os.makedirs(tmp_dir, mode=0o777, exist_ok=True)
+
+    os.chdir(tmp_dir)
+    print("Current work dir", os.getcwd())
+
+    # Create pandasai.json file, so the pandasai can identify the folder is root folder 
+    if not os.path.exists("pandasai.json"):
+        file = open("pandasai.json", 'a')
+        file.close()
+
+    # Create SmartDatalake agent
+    agent = SmartDatalake(
+        dfs=[df],
+        config={
+            "llm": llm, 
+            "enable_cache": False, 
+            "save_logs": False
+        },
+        memory=Memory(memory_size=4)
+    )
 
     # Chat with the agent
     response = agent.chat(query)
